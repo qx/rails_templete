@@ -23,14 +23,6 @@ insert_into_file 'Rakefile', "\nmodule TempFixForRakeLastComment
   end
 end
 Rake::Application.send :include, TempFixForRakeLastComment", after: "require File.expand_path('../config/application', __FILE__)\n"
-## Disable turbolinks
-gsub_file 'Gemfile',
-          /^# Turbolinks makes following links in your web application faster.*\ngem 'turbolinks'\n\n/, ''
-gsub_file 'app/assets/javascripts/application.js',
-          /^\/\/= require turbolinks\n/, ''
-gsub_file 'app/views/layouts/application.html.erb',
-          /, \"data-turbolinks-track\" => true/, ''
-git commit: %Q{-a -m 'Disable turbolinks'}
 
 
 #temp
@@ -38,18 +30,30 @@ gem 'newrelic_rpm'
 gem 'pg'
 gem 'rollbar'
 gem 'friendly_id', '~> 5.1.0'
-gem 'ckeditor'
+# gem 'ckeditor'
 gem 'therubyracer', platforms: :ruby
 gem 'simple_form'
+gem 'figaro', '~>1.1.1'
 gem 'devise'
-gem 'activeadmin','~> 1.0.0.pre4'
+# gem 'activeadmin','~> 1.0.0.pre4'
+gem 'inherited_resources', github: 'activeadmin/inherited_resources'
+
 gem 'bootstrap-sass', '~> 3.3.6'
+
 gem 'font-awesome-rails'
+#install js&&css framework
+gem 'bower-rails', '~>0.10.0'
 
 gem_group :development do
   gem 'spring'
   gem 'spring-commands-rspec'
   gem 'web-console'
+  gem 'capistrano', '~> 3.5.0'
+  gem 'capistrano-bundler', '~>1.1.4'
+  gem 'capistrano-rails', '~>1.1.7'
+  gem 'capistrano-rbenv', '~>2.0.4'
+  gem 'capistrano-rvm', '~>0.1.2'
+  gem 'capistrano3-nginx', '~> 2.0'
 end
 
 gem_group :production do
@@ -60,6 +64,7 @@ gem_group :development, :test do
   gem 'byebug'
   gem 'factory_girl_rails'
   gem 'pry-rails'
+  gem 'capybara', '~>2.7.1'
   gem 'rspec-rails', '~> 3.5'
   gem 'rubocop', require: false
   gem 'coveralls', require: false
@@ -73,12 +78,23 @@ gem_group :test do
   gem 'database_cleaner'
   gem 'timecop'
   gem 'webmock'
+  gem 'email_spec', '~>2.1.0'
+
 end
 #First Route
 route "match '*path' => redirect('/'),via: :get   unless Rails.env.development?"
 
 # config the app to use postgres
 gsub_file "Gemfile", /^gem\s+["']sqlite3["'].*$/,''
+## Disable turbolinks
+gsub_file 'Gemfile',
+          /^# Turbolinks makes following links in your web application faster.*\ngem 'turbolinks'\n\n/, ''
+gsub_file 'app/assets/javascripts/application.js',
+          /^\/\/= require turbolinks\n/, ''
+gsub_file 'app/views/layouts/application.html.erb',
+          /, \"data-turbolinks-track\" => true/, ''
+git commit: %Q{-a -m 'Disable turbolinks'}
+
 remove_file 'config/database.yml'
 template 'database.erb', 'config/database.yml'
 
@@ -196,10 +212,10 @@ open('app/assets/javascripts/application.js', 'a') { |f|
   f << "//= require bootstrap-sprockets\n"
 }
 
-rake("db:create")
-rake("db:create", env: 'test')
-rake("db:migrate")
-rake("db:migrate", env: 'test')
+rails("db:create")
+rails("db:create", env: 'test')
+rails("db:migrate")
+rails("db:migrate", env: 'test')
 
 route "root 'front_page#index'"
 route "resources :contacts, only: [:new, :create]"
